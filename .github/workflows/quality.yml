@@ -1,3 +1,4 @@
+# конфигурация GitHub Actions CI.
 name: Quality
 
 on:
