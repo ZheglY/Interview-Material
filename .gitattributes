@@ -1,0 +1,10 @@
+# Текстовые файлы хранятся в Git с LF независимо от операционной системы.
+* text=auto eol=lf
+
+# Изображения и архивы являются бинарными и не требуют нормализации строк.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
