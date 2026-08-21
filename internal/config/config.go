@@ -38,7 +38,7 @@ type Config struct {
 // GRPCConfig содержит параметры основного gRPC-сервера.
 type GRPCConfig struct {
 	Address         string
-	Reflection      bool
+	Reflection      bool // это механизм самоописания gRPC-сервера.
 	MaxReceiveBytes int
 	MaxSendBytes    int
 }
