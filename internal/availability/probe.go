@@ -14,6 +14,7 @@ type Probe struct {
 	ready atomic.Bool
 }
 
+// Создает структуру с флагом false по умолчанию
 func NewProbe() *Probe {
 	return &Probe{}
 }

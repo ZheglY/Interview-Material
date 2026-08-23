@@ -20,23 +20,26 @@ endpoint вроде /metrics.
 
 // NewRegistry создаёт изолированный реестр метрик для одного приложения.
 func NewRegistry() *prometheus.Registry {
-	// Собственный registry не зависит от глобального состояния сторонних пакетов.
+	// Реестр — объект, в котором хранятся зарегистрированные collectors:
 	registry := prometheus.NewRegistry()
 
 	// Process collector сообщает CPU, память и число файловых дескрипторов процесса.
 	registry.MustRegister(collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}))
 
-	buildMetics := prometheus.NewGaugeVec(
+	// GaugeVec хранит группу Gauge-метрик с одним именем, но разными label values.
+	buildMetrics := prometheus.NewGaugeVec( //- имя метрики — auth_build_info;
 		prometheus.GaugeOpts{
 			Namespace: "auth",
 			Name: "build_info",
-			Help: "Сведение о версии запущенного auth-сурвиса.",
+			Help: "Сведение о версии запущенного auth-сервиса.",
 		},
-		[]string{"version", "commit", "build_time"},
+		[]string{"version", "commit", "build_time"}, 
 	)
 
-	buildMetics.WithLabelValues(buildinfo.Version, buildinfo.Commit, buildinfo.BuildTime).Set(1)
-	registry.MustRegister(buildMetics)
+	//- version, commit, build_time — labels
+	//- числовое значение метрики — 1.
+	buildMetrics.WithLabelValues(buildinfo.Version, buildinfo.Commit, buildinfo.BuildTime).Set(1) 
+	registry.MustRegister(buildMetrics)
 
 	return registry
 }
@@ -48,18 +51,17 @@ func NewRegistry() *prometheus.Registry {
 
 /*
 NewRegistry()
-    ↓
-создать пустой registry
-    ↓
-добавить process_* метрики
-    ↓
-создать auth_build_info
-    ↓
-записать version, commit и build_time
-    ↓
-вернуть registry
-    ↓
-подключить registry к /metrics
-    ↓
+      ↓
+Создаёт пустой реестр
+      ↓
+Добавляет метрики процесса
+      ↓
+Добавляет auth_build_info
+      ↓
+Возвращает реестр
+      ↓
+HTTP endpoint /metrics использует этот реестр
+      ↓
 Prometheus периодически читает /metrics
+
 */
