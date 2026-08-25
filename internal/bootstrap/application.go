@@ -2,8 +2,10 @@ package bootstrap
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
+	"sync"
 
 	"github.com/ZheglY/Interview-Material/internal/availability"
 	"github.com/ZheglY/Interview-Material/internal/config"
@@ -93,6 +95,73 @@ func (application *Application) Run(ctx context.Context) error {
 		zap.Bool("grpc_reflection", application.config.GRPC.Reflection),
 	)
 
-	
+	var runError error
+
+	select {
+	case <-ctx.Done():
+		application.logger.Info("получен сигнал завершения")
+	case result := <-result:
+		// Самопроизвольная остановка одного transport считается аварией процесса.
+		if result.err == nil {
+			runError = fmt.Errorf("%s сервер неожиданно остановился", result.name)
+		} else {
+			runError = fmt.Errorf("%s сервер завершился с ошибкой: %w", result.name, result.err)
+		}
+	}
+
+	// Для остановки создаётся новый context: входной уже может быть отменён сигналом.
+	shutdownContext, cancel := context.WithTimeout(context.Background(), application.config.ShutdownTimeout)
+	defer cancel()
+
+	if err := application.shutdown(shutdownContext); err != nil {
+		if runError == nil {
+			runError = err
+		} else {
+			runError = errors.Join(runError, err)
+		}
+	}
+
+	return runError
+
 
 }
+
+// shutdown параллельно останавливает HTTP и gRPC в пределах общего timeout.
+func (application *Application) shutdown(ctx context.Context) error {
+	application.probe.MarkNotReady()
+
+	var waitGroup sync.WaitGroup
+	errorChannel := make(chan error, 1)
+
+	waitGroup.Add(2)
+	go func() {
+		defer waitGroup.Done()
+		application.grpcServer.GracefulStop(ctx)
+	}()
+
+	go func() {
+		defer waitGroup.Done()
+		if err := application.httpServer.Shutdown(ctx); err != nil {
+			errorChannel <- fmt.Errorf("остановить HTTP-сервер: %w", err)
+		}
+	}()
+
+	waitGroup.Wait()
+	close(errorChannel)
+
+	var shutdownError error
+	for err := range errorChannel {
+		shutdownError = errors.Join(shutdownError, err)
+	}
+
+	if shutdownError == nil {
+		application.logger.Info("серверы корректно остановлены")
+	}
+
+	return shutdownError
+}
+
+//  1. New создаёт зависимости и синхронно открывает оба listener.
+//  2. Run запускает gRPC и HTTP, после чего включает readiness.
+//  3. Сигнал ОС или ошибка любого server запускает общий shutdown.
+//  4. Новые запросы прекращаются, а активным даётся ограниченное время.

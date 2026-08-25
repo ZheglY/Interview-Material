@@ -87,7 +87,7 @@ func (server *Server) GracefulStop(ctx context.Context) {
 
 	finished := make(chan struct{})
 	go func() {
-		server.grpc.GracefulStop()
+		server.grpc.GracefulStop() // с помощью библиотеки завершается
 		close(finished)
 	}()
 
