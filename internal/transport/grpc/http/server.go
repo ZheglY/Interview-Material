@@ -78,7 +78,7 @@ func (server *Server) Serve(listener net.Listener) error {
 
 // Shutdown перестаёт принимать новые соединения и ждёт активные HTTP-запросы.
 func (server *Server) Shutdown(ctx context.Context) error {
-	return server.http.Shutdown(ctx)
+	return server.http.Shutdown(ctx) // с помощью библиотеки закрывает соединение
 }
 
 // writeStatus отправляет маленький JSON-ответ, который нельзя кэшировать.
