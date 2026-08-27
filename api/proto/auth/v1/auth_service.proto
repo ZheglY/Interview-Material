@@ -1,0 +1,36 @@
+// API управления пользовательской аутентификацией.
+syntax = "proto3";
+
+// auth.v1 — первая стабильная версия публичного gRPC-контракта.
+package auth.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Путь Go-пакета соответствует физическому каталогу с генерируемым кодом.
+option go_package = "github.com/ZheglY/Interview-Material/gen/go/auth/v1;authv1";
+
+// AuthService предоставляет операции управления учётной записью и сессией.
+service AuthService {
+    rpc Register(RegisterRequest) returns (RegisterResponse); // Register создаёт новую учётную запись с email и паролем.
+}
+
+// RegisterRequest содержит данные, переданные пользователем при регистрации.
+message RegisterRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message RegisterResponse {
+    User user = 1;
+}
+
+message User {
+    string id = 1; // id — стабильный UUID пользователя.
+    string email = 2;
+    google.protobuf.Timestamp created_at = 3; // created_at — момент регистрации в UTC.
+}
+
+//  1. Контракт определяет единственный метод Register и его сообщения.
+//  2. gRPC-клиенты используют Register напрямую по HTTP/2 и protobuf.
+//  3. HTTP-аннотация будет добавлена вместе с отдельным gateway-слоем.
+//  4. Password намеренно существует только во входящем сообщении и не возвращается.
