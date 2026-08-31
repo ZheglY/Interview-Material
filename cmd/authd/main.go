@@ -68,3 +68,19 @@ func run() int {
 //  3. bootstrap.Application владеет transport-компонентами и их shutdown.
 //  4. Любая ошибка запуска преобразуется в ненулевой process exit code.
 
+/*
+internal/adapter/inbound/grpc/auth
+    входящий gRPC handler
+
+internal/application/register
+    бизнес-сценарий регистрации
+
+internal/application/port
+    интерфейсы, которые нужны бизнес-сценарию
+
+internal/adapter/outbound/memory
+    временная реализация repository в памяти
+
+internal/adapter/outbound/postgres
+    будущая реализация repository через SQL/PostgreSQL
+*/

@@ -8,20 +8,20 @@ type User struct {
 	createdAt time.Time
 }
 
-func NewUser(id string, email Email, createdAt time.Time) (*User, error) {
+func NewUser(id string, email Email, createdAt time.Time) (User, error) {
 	if id == "" {
-		return &User{}, ErrInvalidUserID
+		return User{}, ErrInvalidUserID
 	}
 
 	if email.Value() == "" {
-		return &User{}, ErrInvalidUserCreatedAt
+		return User{}, ErrInvalidUserCreatedAt
 	}
 
 	if createdAt.IsZero() { // Функция из стандартной библиотки GO
-		return &User{}, ErrInvalidUserCreatedAt
+		return User{}, ErrInvalidUserCreatedAt
 	}
 
-	return &User{
+	return User{
 		id: id,
 		email: email,
 		createdAt: createdAt.UTC(),
